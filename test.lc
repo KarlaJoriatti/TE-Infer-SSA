@@ -1,13 +1,13 @@
 //effect Exception {
 //  function throw(string): unit;
 //}
-//
+
 //algorithm safe_division(int a, int b) {
 //  if(b == 0)
 //    throw("can't divide by zero");
 //  return a / b;
 //}
-//
+
 //handler exception_to_maybe() {
 //  pure x: {
 //    return just(x);

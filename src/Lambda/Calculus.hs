@@ -175,10 +175,12 @@ instance Show Expr where
                 emit " "
                 worker e
                 newline
+                putIndentation i
                 indent
                 emit "then "
                 worker a
                 newline
+                putIndentation i
                 indent
                 emit "else "
                 worker b
@@ -198,11 +200,15 @@ instance Show Expr where
                 putIndentation i
 
             worker (Application a b) = do
+                saveIndentation
+                i<-getIndentation
                 emit "("
                 worker a
                 emit " "
                 worker b
                 emit ")"
+                
+
 
             worker (Operation op a b) = do
                 worker a
@@ -217,15 +223,27 @@ instance Show Expr where
                 worker b
 
             worker (Where bindings e) = do
+                -- saveIndentation
+                -- i <- getIndentation
+                -- worker e
+                -- putIndentation i
+                -- indent
+                -- emit "where "
+                -- emitBindings bindings
+                saveIndentation
+                j <- getIndentation
+                worker e
                 saveIndentation
                 i <- getIndentation
-                emit "let "
+                newline
+                putIndentation j
+                indent
+                emit "where { "
                 saveIndentation
                 emitBindings bindings
                 putIndentation i
                 indent
-                emit "in "
-                worker e
+                emit "} "
 
             emit str = do
                 (a, b) <- get

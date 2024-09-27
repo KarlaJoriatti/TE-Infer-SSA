@@ -11,6 +11,10 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Lambda.Calculus as C
 import Debug.Trace
+import Control.Monad.Fail as Fail
+
+instance Fail.MonadFail Identity where
+  fail = Fail.fail
 
 data TypeError = CannotUnify C.Type C.Type
                | InfiniteType String C.Type
