@@ -31,9 +31,10 @@ executable lambdaC
                     Lexer,
                     Parser,
                     Effect,
-                    SingleAssignment
+                    SingleAssignment,
+                    ParserCalculus
   build-depends:    base >= 4.7 && < 5,
                     array >= 0.5,
                     containers >= 0.5,
                     mtl >= 2.0,
-                    extensible-effects
+                    parsec >= 3.1
