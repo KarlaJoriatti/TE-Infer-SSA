@@ -1,21 +1,34 @@
-//effect Exception {
-//  function throw(string): unit;
-//}
+effect exception {
+  function throw(string): unit;
+}
 
-//algorithm safe_division(int a, int b) {
-//  if(b == 0)
-//    throw("can't divide by zero");
-//  return a / b;
-//}
 
-//handler exception_to_maybe() {
-//  pure x: {
-//    return just(x);
-//  }
-//  case throw(str): {
-//    return nothing();
-//  }
-//}
+algorithm safe_division(int a, int b) {
+  if(b == 0)
+     throw("can't divide by zero");
+  return a / b;
+}
+
+algorithm fun(){
+  return 2;
+}
+
+handler exception_to_maybe() {
+  pure x: {
+    return just(x);
+  }
+  case throw(str): {
+    return nothing();
+  }
+}
+
+algorithm max(var n, var m) {
+  if(n > m) {
+    return n;
+  } else {
+    return m;
+  }
+}
 
 algorithm fibonnaci(int n) {
   int x = 0;
@@ -28,4 +41,57 @@ algorithm fibonnaci(int n) {
   }
 
   return y;
+}
+
+algorithm test() {
+  return max(fibonnaci(10));
+}
+
+effect Amb {
+  function flip(): bool;
+}
+
+effect State {
+  function get(): int;
+  function set(int): unit;
+}
+
+
+algorithm aaa(var a, var b, var c, var d) {
+  if(flip()) {
+    return a + b;
+  } else {
+    return c + d;
+  }
+}
+
+algorithm bbb(var a, var b) {
+  set(10);
+  return aaa(a, b);
+}
+
+
+algorithm or(bool a, bool b){
+  if (a == true){
+    print(true);
+  } else {
+    print(b);
+  }
+}
+
+algorithm xor() {
+  var p = flip();
+  var q = flip();
+  return (p);
+}
+
+algorithm foo(var threshold) {
+  var p = flip();
+  var i = get();
+  set(i + 1);
+  if(i > threshold) {
+    return xor();
+  } else {
+    return false;
+  }
 }

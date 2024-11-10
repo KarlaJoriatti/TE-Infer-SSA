@@ -273,10 +273,10 @@ infer env (C.Handler eff branches e) = do
     theta <- foldM (inferCase tau_x2 epsilon) (theta_x C.@@ theta_p) cases
     let epsilon_r = C.subst theta epsilon
     (theta_e, tau_e, epsilon_e) <- infer env e
-    traceM $ "Type of expression itself:"
-    traceM $ show (theta_e, tau_e, epsilon_e)
+    --traceM $ "Type of expression itself:"
+    --traceM $ show (theta_e, tau_e, epsilon_e)
     theta_a <- unify tau_e (C.subst (theta_e C.@@ theta) tau_x1)
-    traceM $ show theta_a
+    --traceM $ show theta_a
     theta_b <- unify epsilon_e (C.subst theta_e (C.Row (C.Constant eff []) epsilon_r))
   
     let theta_acc = theta_b C.@@ theta_a C.@@ theta_e C.@@ theta
@@ -366,6 +366,8 @@ initialEnvironment =
                         (C.Constant "Maybe" [C.Generic "a"])),
         ("just", C.Forall ["a", "u"] $ C.Arrow (C.Generic "a") (C.Generic "u")
                         (C.Constant "Maybe" [C.Generic "a"])),
+        ("or", C.Forall ["u"] $ C.Arrow (C.Bool) (C.Generic "u")
+                                    (C.Arrow (C.Bool) (C.Generic "u") (C.Bool))),
         -- Example for how we can remove a effect from a closure
         --("removeFoo",
         --    C.Forall ["a", "b", "u"] $
@@ -389,8 +391,8 @@ initialEnvironment =
             (C.Arrow C.Int (C.Generic "u") C.Bool)),
         ("(>)", C.Forall ["u"] $ C.Arrow C.Int (C.Generic "u")
             (C.Arrow C.Int (C.Generic "u") C.Bool)),
-        ("(=)", C.Forall ["u"] $ C.Arrow C.Int (C.Generic "u")
-            (C.Arrow C.Int (C.Generic "u") C.Bool)),
+        ("(=)", C.Forall ["a","u"] $ C.Arrow (C.Generic "a") (C.Generic "u")
+            (C.Arrow (C.Generic "a") (C.Generic "u") C.Bool)),
         ("(?:)", C.Forall ["a", "u"] $ C.Arrow C.Bool (C.Generic "u")
             (C.Arrow (C.Generic "a") (C.Generic "u")
                 (C.Arrow (C.Generic "a") (C.Generic "u")

@@ -170,6 +170,7 @@ instance Show Expr where
                 
             worker (If e a b) = do
                 i <- getIndentation
+                emit "("
                 emit "if"
                 saveIndentation
                 emit " "
@@ -182,6 +183,7 @@ instance Show Expr where
                 indent
                 emit "else "
                 worker b
+                emit ")"
                 putIndentation i
 
             worker (Application lambda@(Lambda s b) a) = do
@@ -209,6 +211,7 @@ instance Show Expr where
 
 
             worker (Operation op a b) = do
+                emit "("
                 worker a
                 emit $ case op of
                     Lambda.Calculus.Sum -> " + "
@@ -219,6 +222,7 @@ instance Show Expr where
                     Lambda.Calculus.Gt -> " > "
                     Lambda.Calculus.Eq -> " == "
                 worker b
+                emit ")"
 
             worker (Where bindings e) = do
                 i <- getIndentation
@@ -281,6 +285,7 @@ instance Show Expr where
             emitBindings ((s, e):rest) = do
                 i <- getIndentation
                 saveIndentation
+                emit " "
                 emit s
                 emit " "
                 emitSingleBinding e

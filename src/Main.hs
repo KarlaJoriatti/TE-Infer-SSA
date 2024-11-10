@@ -12,6 +12,7 @@ import qualified Lambda.Calculus as LC
 import qualified Lambda.Lexer as LL
 import qualified Lambda.Parser as LP
 import qualified Lambda.Inference as LI
+import qualified ParserCalculus as PC
 import Data.Char
 import Data.List
 import Control.Monad
@@ -72,8 +73,8 @@ writeDotFile nodes dominators = do
   hPutStrLn handle "}"
   hClose handle
 
-showToplevel (env, effs) (P.Handler name cases) = do
-      putStrLn $ "\nAdding handler " ++ name ++ "..."
+showToplevel hd (env, effs) (P.Handler name cases) = do
+      hPutStrLn hd $ "\nhandler " ++ name ++ "{"
       let which@(effect, _) = E.decideEffectHandler cases effs
     
       bodies <- flip mapM cases $ \c -> do
@@ -86,32 +87,44 @@ showToplevel (env, effs) (P.Handler name cases) = do
                                        P.HandlerPure x b -> (Nothing, [x], b)
         let algorithm = P.Algorithm "" (fmap (P.Declarator P.TypeVar) params) body
         converted <- astToLambda algorithm
+        case name of
+            Just n -> hPutStr hd (" " ++ n ++ " = ")
+            _ -> hPutStr hd " pure = "
+        hPutStrLn hd (show converted)
         return (name, converted)
     
       let handler = LC.Lambda "'e" $
             LC.Handler effect bodies $
                   LC.Application (LC.Free "'e") LC.UnitValue
     
-      putStrLn "\nInfered type:"
+      hPutStrLn hd "}"
       let it = LI.runInferer handler env
-      print it
+      --print it
     
       return (LC.extend env name it, effs)
     
-showToplevel (env, effs) (P.Effect name funs) = do
-      let (decls, eff) = E.effectIntoDeclarations name funs env
+showToplevel hd (env, effs) (P.Effect name funs) = do
+      let (decls, eff@(ef, xs)) = E.effectIntoDeclarations name funs env
+      --putStrLn "-----------------------"
+      hPutStrLn hd ("effect " ++ ef ++ " {")
+      --hPutStrLn hd "seila irmao"
+      showDeclarations hd decls
+      hPutStrLn hd "}\n"
       return (foldl (\e (n, t) -> LC.extend e n t) env decls, eff : effs)
 
-showToplevel (env, effs) algorithm@(P.Algorithm f p s) = do
+showToplevel hd (env, effs) algorithm@(P.Algorithm f p s) = do
       --putStrLn $ "\nChecking function " ++ f ++ "..."
       converted <- astToLambda algorithm
       --
       --putStrLn "\nContext before inference:"
       --print env
       --
-      putStrLn "\nInfered type:"
+      
+      hPutStr hd $ f ++ " : "
       let it = LI.runInferer converted env
-      print it
+      hPutStrLn hd (show it)
+      hPutStr hd $ f ++ " = "
+      hPutStrLn hd (show converted)
       --
       return (LC.extend env f it, effs)
 
@@ -144,12 +157,21 @@ astToLambda algorithm@(P.Algorithm f p s) = do
       let renamed = S.rename graph nodes known_variables dom_tree phi_nodes
       --putStrLn $ "  " ++ show renamed
       writeDotFile renamed i_dominators
-      putStrLn "\nConverted:"
+      --putStrLn "\nConverted:"
       let converted = C.to_lambda algorithm renamed dom_tree
-      putStrLn $ show converted
+      --putStrLn $ show converted
       return converted
 
+showDeclarations hd [] = return ()
+showDeclarations hd ((fun, decl):xs) = do
+      hPutStr hd " "
+      hPutStr hd fun
+      hPutStr hd ": "
+      hPutStrLn hd (show decl)
+      showDeclarations hd xs
+
 main = do
+      handle <- openFile "saida.lc" WriteMode
       -- putStrLn "Lexer:"
       input <- readFile "test.lc"
       let l = L.lex input
@@ -157,10 +179,15 @@ main = do
       -- putStrLn "\nParser:"
       let p = P.parse l
       -- print p
-      (env, _) <- foldM showToplevel (LI.initialEnvironment, []) p
-
-      putStrLn "\nFinal environment:"
-      print env
+      (env, x) <- foldM (showToplevel handle) (LI.initialEnvironment, []) p
+      hPutStrLn handle ""
+      hClose handle
+      ir <- readFile "saida.lc"
+      PC.parseCalculus ir
+      --putStrLn "\nFinal environment:"
+      --print env
+      --putStrLn "-------------------------------"
+      --print x
 
 {- 
       -- For debug/infer directly lambda calculus   
