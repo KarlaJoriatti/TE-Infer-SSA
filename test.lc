@@ -49,11 +49,13 @@ algorithm test() {
 
 effect Amb {
   function flip(): bool;
+  function top(int, int, bool):string;
 }
 
 effect State {
   function get(): int;
   function set(int): unit;
+  function sla(string, int): bool;
 }
 
 
@@ -88,6 +90,8 @@ algorithm xor() {
 algorithm foo(var threshold) {
   var p = flip();
   var i = get();
+  var j = sla("oi", 2);
+  var k = top(i, i, p);
   set(i + 1);
   if(i > threshold) {
     return xor();

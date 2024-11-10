@@ -502,7 +502,9 @@ teste (Arrow Unit e t) f = do (a, b) <- teste e f
 teste (Arrow t1 (Generic i) t2@(Arrow a b c)) f = do t <- freshVar
                                                      (a, b) <- teste t1 f
                                                      (a2, b2) <- teste t2 f
-                                                     return (a ++ "-> Eff " ++ show t ++ " (" ++ a2 ++ ")", joinStrs b b2)
+                                                     if f 
+                                                     then return (a ++ "-> " ++ a2, joinStrs b b2)
+                                                     else return (a ++ "-> Eff " ++ show t ++ " (" ++ a2 ++ ")", joinStrs b b2)
 teste (Arrow t1 e t2@(Arrow a b c)) f = do (a, b) <- teste t1 f
                                            (a1, b1) <- teste e f
                                            (a2, b2) <- teste t2 f
@@ -523,18 +525,26 @@ countParams (Arrow t (Generic i) t') = 1 + countParams t'
 countParams _ = 1
 
 sendParams 0 = ""
-sendParams i = "x" ++ show i ++ " " ++ sendParams (i-1)
+sendParams i = "return (\\x" ++ show i ++ " -> " ++ sendParams (i-1)
+
+params 0 = ""
+params n = "x" ++ show n ++ " " ++ params (n-1)
 
 createSend hd [] = return ()
 createSend hd ((nome@(c:cs), tipo):xs) = do hPutStr hd (nome ++ " ")
 		                            case tipo of
 		                               (Arrow Unit _ _) -> do {hPutStr hd ("() = send " ++ [toUpper c] ++ cs); hPutStrLn hd ""}
 		                               t -> do let n = countParams t
-		                                           a = sendParams n
-		                                       hPutStr hd a
-		                                       hPutStr hd (" = send (" ++ [toUpper c] ++ cs ++ " ")
-		                                       hPutStr hd a
-		                                       hPutStrLn hd ")"
+		                                       if n > 1
+		                                       then 
+		                                         do let a = sendParams (n-1)
+		                                                p = params (n-1)
+		                                            hPutStr hd "x0 = "
+		                                            hPutStr hd a
+		                                            hPutStr hd ("send (" ++ [toUpper c] ++ cs ++ " x0 ")
+		                                            hPutStr hd p
+		                                            hPutStrLn hd (concat (take n (repeat ")")))
+		                                       else hPutStrLn hd ("x0 = send (" ++ [toUpper c] ++ cs ++ " x0)")
 		                            createSend hd xs
 
 saidaDeclaracoes _ [] = return ()
@@ -596,3 +606,7 @@ parseCalculus s = case parseExpr s of
                      Left er -> print er
                      Right e -> saida e
  
+main = do putStrLn "Arquivo: "
+          x <- getLine
+          s <- readFile x
+          parseCalculus s

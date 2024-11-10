@@ -110,11 +110,13 @@ test = \_ ->
   }
 effect Amb {
  flip: ∀a.unit → <Amb, a> bool
+ top: ∀a b c.int → c int → b bool → <Amb, a> string
 }
 
 effect State {
  get: ∀a.unit → <State, a> int
  set: ∀a.int → <State, a> unit
+ sla: ∀a b.string → b int → <State, a> bool
 }
 
 aaa : ∀a b c d.int → d int → c int → b int → <Amb, a> int
@@ -193,20 +195,30 @@ foo = \threshold0 ->
                         (bl4 ())
                         where {
                          bl4 _ =
-                          let _ = (set (i1 + 1)) in
-                                  (bl5 ())
-                                  where {
-                                   bl5 _ =
-                                    (if (i1 > threshold0)
-                                       then (bl6 ())
-                                            else (bl7 ()))
-                                  where {
-                                   bl6 _ =
-                                    (xor ())
-                                   bl7 _ =
-                                    false
-                                  }
-                                  }
+                          let j1 = ((sla "\"oi\"") 2) in
+                                    (bl5 ())
+                                    where {
+                                     bl5 _ =
+                                      let k1 = (((top i1) i1) p1) in
+                                                 (bl6 ())
+                                                 where {
+                                                  bl6 _ =
+                                                   let _ = (set (i1 + 1)) in
+                                                           (bl7 ())
+                                                           where {
+                                                            bl7 _ =
+                                                             (if (i1 > threshold0)
+                                                                then (bl8 ())
+                                                                     else (bl9 ()))
+                                                           where {
+                                                            bl8 _ =
+                                                             (xor ())
+                                                            bl9 _ =
+                                                             false
+                                                           }
+                                                           }
+                                                 }
+                                    }
                         }
              }
   }

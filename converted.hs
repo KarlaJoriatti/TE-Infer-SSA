@@ -3,7 +3,7 @@ import Control.Eff
 import Control.Eff.Extend
 import Debug.Trace
 
-import Prelude hiding (print,safedivision, throw, fun, flip, max, get, fibonnaci, set, test, aaa, bbb, or, xor, foo)
+import Prelude hiding (print,safedivision, throw, fun, flip, max, top, fibonnaci, get, test, set, aaa, sla, bbb, or, xor, foo)
 
 
 data Console x where
@@ -14,19 +14,23 @@ print x = send (Print x)
 data Exception x where
    Throw :: String -> Exception () 
 
-throw x1  = send (Throw x1 )
+throw x0 = send (Throw x0)
 
 data Amb x where
    Flip :: Amb Bool 
+   Top :: Int -> Int -> Bool -> Amb String 
 
 flip () = send Flip
+top x0 = return (\x2 -> return (\x1 -> send (Top x0 x2 x1 )))
 
 data State x where
    Get :: State Int 
    Set :: Int -> State () 
+   Sla :: String -> Int -> State Bool 
 
 get () = send Get
-set x1  = send (Set x1 )
+set x0 = send (Set x0)
+sla x0 = return (\x1 -> send (Sla x0 x1 ))
 
 eapp :: Monad m => m (a -> m b) -> m a -> m b
 eapp f x = do
@@ -174,16 +178,22 @@ foo = \threshold0 -> do
          let bl3 _ = do 
                  i1 <- ( return get `eapp` return ())
                  let bl4 _ = do 
-                         _ <- ( return set `eapp` ( ( + ) <$> return i1 <*> return 1))
+                         j1 <- (( return sla `eapp` return "\"oi\"") `eapp` return 2)
                          let bl5 _ = do 
+                                 k1 <- ((( return top `eapp` return i1) `eapp` return i1) `eapp` return p1)
                                  let bl6 _ = do 
-                                         ( return xor `eapp` return ())
-                                     bl7 _ = do 
-                                         return False
-                                 t33 <- return (i1  >  threshold0)
-                                 if t33
-                                 then ( return bl6 `eapp` return ())
-                                 else ( return bl7 `eapp` return ())
+                                         _ <- ( return set `eapp` ( ( + ) <$> return i1 <*> return 1))
+                                         let bl7 _ = do 
+                                                 let bl8 _ = do 
+                                                         ( return xor `eapp` return ())
+                                                     bl9 _ = do 
+                                                         return False
+                                                 t49 <- return (i1  >  threshold0)
+                                                 if t49
+                                                 then ( return bl8 `eapp` return ())
+                                                 else ( return bl9 `eapp` return ())
+                                         ( return bl7 `eapp` return ())
+                                 ( return bl6 `eapp` return ())
                          ( return bl5 `eapp` return ())
                  ( return bl4 `eapp` return ())
          ( return bl3 `eapp` return ())
