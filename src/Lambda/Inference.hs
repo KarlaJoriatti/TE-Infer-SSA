@@ -94,7 +94,7 @@ unify foo@(C.Row l epsilon1) epsilon2 = do
         else do
             --traceM $ "We know that " ++ show (C.subst theta1 epsilon2)
             --traceM $ "should equal " ++ show (C.Row (C.subst theta1 l) (C.subst theta1 epsilon3))
-            -- TODO: better this message. 
+            -- TODO: better this message.
             error "Fatal error DEU RUIM"
 
     when (M.member (tl epsilon1) theta1) $ do
@@ -128,9 +128,9 @@ unifyEffect (C.Row l' epsilon) l =
         return (epsilon, theta)
     -- (EFF-SWAP)
     else do
-    -- We've been found a error in the algorithm: 
+    -- We've been found a error in the algorithm:
     -- Koka's paper says we should return l on tail,
-    -- but we actually return l' here, otherwise the algorithm "DÁ RUIM". 
+    -- but we actually return l' here, otherwise the algorithm "DÁ RUIM".
         (epsilon', theta) <- unifyEffect epsilon l
         return (C.Row l' epsilon', theta)
 unifyEffect (C.Generic mu) l = do
@@ -278,10 +278,10 @@ infer env (C.Handler eff branches e) = do
     theta_a <- unify tau_e (C.subst (theta_e C.@@ theta) tau_x1)
     --traceM $ show theta_a
     theta_b <- unify epsilon_e (C.subst theta_e (C.Row (C.Constant eff []) epsilon_r))
-  
+
     let theta_acc = theta_b C.@@ theta_a C.@@ theta_e C.@@ theta
     return (theta_acc, C.subst (theta_acc) tau_x2, C.subst (theta_b C.@@ theta_a) epsilon_r)
-    
+
     where
         inferCase tau_x2 epsilon theta (Just name, expr) = do
             -- Here we need the return type of the effectful function; we use
@@ -399,15 +399,19 @@ initialEnvironment =
                     (C.Generic "a"))))
     ])
 
-runInferer :: C.Expr -> C.Environment -> C.Scheme
-runInferer e g =
+runInferer :: C.Expr -> C.Environment -> String -> C.Scheme
+runInferer e g f =
     case runIdentity runInfererM of
       Right scheme -> scheme
       Left message -> error $ show message
     where
         runInfererM =
             runInferer' $ do
-                (s, t, k) <- infer g e
+                var <- newTypeVar
+                (s, t, k) <- infer (C.extend' g f var) e
+                -- Unify our recursive case!
+                theta <- unify (C.subst s var) t
+                let t' = C.subst theta t
                 put 0
-                result <- instantiate $ generalize g t
+                result <- instantiate $ generalize g t'
                 return $ generalize g result

@@ -23,7 +23,7 @@ showTokens ((line, column, text, token):xs) = do
     putStrLn $ "  " ++ show line ++ ":" ++ show column ++ " = " ++ show token ++ " `" ++ text ++ "`"
     showTokens xs
 
-showNodesDot _ [] = do { return (); } 
+showNodesDot _ [] = do { return (); }
 
 showNodeDot handle (B.Phi var num values node) prefix = do
       showNodeDot handle node (var ++ subscript num ++ " = φ(" ++ intercalate ", " values' ++ ")\\n" ++ prefix)
@@ -76,9 +76,9 @@ writeDotFile nodes dominators = do
 showToplevel hd (env, effs) (P.Handler name cases) = do
       hPutStrLn hd $ "\nhandler " ++ name ++ "{"
       let which@(effect, _) = E.decideEffectHandler cases effs
-    
+
       bodies <- flip mapM cases $ \c -> do
-    
+
         let (name, params, body) = case c of
                                        -- If we don't have a parameter, pretend we have
                                        -- one (that will be unit)
@@ -92,17 +92,17 @@ showToplevel hd (env, effs) (P.Handler name cases) = do
             _ -> hPutStr hd " pure = "
         hPutStrLn hd (show converted)
         return (name, converted)
-    
+
       let handler = LC.Lambda "'e" $
             LC.Handler effect bodies $
                   LC.Application (LC.Free "'e") LC.UnitValue
-    
+
       hPutStrLn hd "}"
-      let it = LI.runInferer handler env
+      let it = LI.runInferer handler env name
       --print it
-    
+
       return (LC.extend env name it, effs)
-    
+
 showToplevel hd (env, effs) (P.Effect name funs) = do
       let (decls, eff@(ef, xs)) = E.effectIntoDeclarations name funs env
       --putStrLn "-----------------------"
@@ -119,9 +119,9 @@ showToplevel hd (env, effs) algorithm@(P.Algorithm f p s) = do
       --putStrLn "\nContext before inference:"
       --print env
       --
-      
+
       hPutStr hd $ f ++ " : "
-      let it = LI.runInferer converted env
+      let it = LI.runInferer converted env f
       hPutStrLn hd (show it)
       hPutStr hd $ f ++ " = "
       hPutStrLn hd (show converted)
@@ -189,9 +189,9 @@ main = do
       --putStrLn "-------------------------------"
       --print x
 
-{- 
-      -- For debug/infer directly lambda calculus   
-    
+{-
+      -- For debug/infer directly lambda calculus
+
       input <- readFile "test.txt"
       putStrLn "Lexer:"
       let l = LL.lex input
@@ -202,5 +202,5 @@ main = do
       putStrLn "\nInfered type:"
       let it = LI.runInferer p
       print it
-  
+
 -}
